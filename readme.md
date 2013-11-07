@@ -85,7 +85,7 @@ Class derived from EventProviderForm which issues EVENT_PRE_BIND, EVENT_PRE_PREP
 Class which creates a Zend\Session\SessionManager. Configuration options can be supplied through the `'session'`
 config key.
 
-### Directory Stdlib
+### Directory: Stdlib
 
 ##### GenericRegistry
 
@@ -138,13 +138,13 @@ option set is specified, these option set will be applied afterwards and extends
 	 echo $options->getValue1();	//-- output 32
 	 echo $options->getValue2();	//-- output 2   
 
-### Directory Stdlib\Hydrator
+### Directory: Stdlib\Hydrator
 
 ##### ClassMethods
 
 Hydrator derived from Zend\Stdlib\Hydrator\ClassMethods. Overrides the `__construct()` parameter's default value for behaviour compatibility reasons regarding other hydrators.
 
-### Directory ServiceManager
+### Directory: ServiceManager
 
 ##### GenericPluginManager
 
@@ -207,6 +207,76 @@ like this (ListenerManager is the class derived from GenericPluginManager in thi
 		    return $plugins;
 		}
 	}
+
+### Directory: ServiceManager/Plugin
+
+##### AbstractPlugin
+
+Base class of all Plugins maintained by `GenericPluginManager`. Derived PluginManagers should overwrite `GenericPluginManager::isValid()` according to the particular service classes you derive from `AbstractPlugin`.
+
+`AbstractPlugin` handles service option setup through the `GenericPluginManager`.
+
+Additionally, `AbstractPlugin` a generic helper function `translateVars` to replace strings in option values. Derived classes should overwrite `getVars()` according to their needs.
+
+	public function getRootDirectory() {
+		return 'C:\';
+	}
+
+	public function getVars() {
+		return array(
+			'%rootDirectory% => $this->getRootDirectory(),
+			'%myOtherReplacement% => 'test',
+		);
+	}
+	
+	$value1 = '%rootDirectory%' . 'temp';
+	$value2 = '%myOtherReplacement%' . 'ing';
+	$value3 = 'myOption';
+
+	echo $this->translateVars($value1); //-- output: 'C:\temp'
+    echo $this->translateVars($value2); //-- output: 'testing'
+	echo $this->translateVars($value3); //-- output: 'myOption';
+		 
+##### AbstractGenerator
+
+Example class demonstrating how to implement a plugin that allows overriding of it's options
+for the runtime of a particular method by parameters provided.
+
+	abstract class AbstractGenerator extends AbstractPlugin {
+	    
+	    protected $optionStack;
+	    
+		public function generate($params, $options = null) {
+	        $this->getOptionStack()->push($this->options);
+		    $this->options = $this->getActualOptions($params, $options);
+		     
+		    $result = $this->doGenerate($this->options);
+		    $reset = $this->options->getResetOptionsAfterRun();
+		    $this->options = $this->optionStack->pop();
+		    if ($reset) $this->resetOptions();
+		    return $result;	    
+		}
+		
+		public function doGenerate($options) {
+		    //abstract
+		}
+		
+	    protected function getOptionStack() {
+	        if (!$this->optionStack) {
+	            $this->optionStack = new SplStack();
+	        }
+	        return $this->optionStack;
+	    }
+	    
+	    public function resetOptions() {
+	        parent::resetOptions();
+	        $this->optionStack = new SplStack();
+	    }
+	}
+
+We use an SplStack stack here to save the current options. Then, the parameters get merged with the options, thus overwriting/extending them. With the merged set of options we call `doGenerate`. Afterwards the original options get restored from the stack.
+
+If the plugin options contain `reset_options_after_run` with value `true`, the plugin will be restored to its default setup and the option stack gets cleared. 
 
 Credits
 -------
