@@ -11,8 +11,8 @@ use MxcGenerics\Stdlib\GenericOptions;
 class GenericPluginManager extends AbstractPluginManager {
 
     protected $setup;
-    protected $pluginOptionKey;
-    protected $pluginOptions = null;
+    protected $pluginConfigurationsKey;
+    protected $pluginConfigurations = null;
     protected $pluginContext = null;
     
     public function setup($setup) {
@@ -62,9 +62,9 @@ class GenericPluginManager extends AbstractPluginManager {
         if ($options) $instance->init($options);
         return $instance;
     }
-
-    public function getPluginOptions($type, $name = 'defaults') {
-        if (!$this->pluginOptions) {
+    
+    public function getPluginConfigurations() {
+        if (!$this->pluginConfigurations) {
             $config = $this->getServiceLocator()->get('Configuration');
             $setup = $this->getSetup();
             if (!$setup) {
@@ -80,10 +80,19 @@ class GenericPluginManager extends AbstractPluginManager {
                     get_class($this)
                 ));
             }
-            $this->pluginOptions = isset($config[$key]) ? $config[$key] : array();
+            $this->pluginConfigurations = isset($config[$key]) ? $config[$key] : array();
         }
-        
-        return new GenericOptions($this->pluginOptions[$type],$name);
+        return $this->pluginConfigurations;
+    }
+
+    public function getPluginOptionSet($type) {
+        $pluginConfigurations = $this->getPluginConfigurations();
+        return isset($pluginConfigurations[$type]) ? $pluginConfigurations[$type] : array();
+    }
+    
+    public function getPluginOptions($type, $name = 'defaults') {
+        $pluginConfigurations = $this->getPluginConfigurations();
+        return new GenericOptions($pluginConfigurations[$type],$name);
     }
 
     public function getPluginContext() {
