@@ -16,21 +16,7 @@ class GenericPluginManager extends AbstractPluginManager {
     protected $pluginContext = null;
     
     public function setup($setup) {
-        if (is_string($setup)) {
-            $config = $this->getServiceLocator()->get('Configuration');
-            $setup = isset($config[$setup]) ? $config[$setup] : array();
-            $this->setup = new GenericRegistry($setup);
-            return;
-        }
-        if (is_array($setup)) {
-            $this->setup = new GenericRegistry($setup);
-            return;
-        }
-        if ($setup instanceof GenericRegistry) {
-            $this->setup = $setup;
-            return;
-        }
-        $this->setup = new GenericRegistry();
+        $this->setup = $setup;
     }
         
 	public function validatePlugin($plugin) {
@@ -103,6 +89,19 @@ class GenericPluginManager extends AbstractPluginManager {
     }
     
     protected function getSetup() {
+        if (!($this->setup instanceof GenericRegistry)) {
+            if (is_string($this->setup)) {
+                $config = $this->getServiceLocator()->get('Configuration');
+                $setup = isset($config[$this->setup]) ? $config[$this->setup] : array();
+                $this->setup = new GenericRegistry($setup);
+            } elseif (is_array($this->setup)) {
+                $this->setup = new GenericRegistry($this->setup);
+            } else {
+                echo "bläh";
+                $this->setup = new GenericRegistry();
+            }
+        }
+        
         return $this->setup;
     }
 }

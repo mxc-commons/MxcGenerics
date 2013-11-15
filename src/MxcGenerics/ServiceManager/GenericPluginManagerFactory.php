@@ -3,9 +3,9 @@
 namespace MxcGenerics\ServiceManager;
 
 use Zend\ServiceManager\ServiceLocatorInterface;
-use Zend\Mvc\Service\AbstractPluginManagerFactory;
+use Zend\ServiceManager\FactoryInterface;
 
-class GenericPluginManagerFactory extends AbstractPluginManagerFactory {
+class GenericPluginManagerFactory implements FactoryInterface {
 
     const PLUGIN_MANAGER_CLASS = 'GenericPluginManager';
     
@@ -15,7 +15,10 @@ class GenericPluginManagerFactory extends AbstractPluginManagerFactory {
 	 * @see \Zend\ServiceManager\FactoryInterface::createService()
 	 */
 	public function createService(ServiceLocatorInterface $serviceLocator) {
-	    $plugins = parent::createService($serviceLocator);
+        $pluginManagerClass = static::PLUGIN_MANAGER_CLASS;
+        /* @var $plugins \Zend\ServiceManager\AbstractPluginManager */
+        $plugins = new $pluginManagerClass;
+        $plugins->setServiceLocator($serviceLocator);
 	    $plugins->setup($this->setup);
 	    return $plugins;
 	}
