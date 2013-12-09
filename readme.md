@@ -138,6 +138,11 @@ option set is specified, these option set will be applied afterwards and extends
 	 echo $options->getValue1();	//-- output 32
 	 echo $options->getValue2();	//-- output 2   
 
+##### StringHelper
+
+Collection of helper functions for strings. Currently the class contains one first single static member. 
+formatVarExport is meant to make array var_export output look a little bit nicer.
+
 ### Directory: Stdlib\Hydrator
 
 ##### ClassMethods
