@@ -26,6 +26,10 @@ abstract class AbstractPlugin
         $this->setOptions($options);       
     }
     
+	protected function getServiceManager() {
+		return $this->getServiceLocator()->getServiceLocator();
+	}
+	
 	public function getServiceLocator() {
 	    return $this->serviceLocator;
 	}
