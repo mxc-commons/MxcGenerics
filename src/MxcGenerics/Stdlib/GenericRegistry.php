@@ -3,6 +3,8 @@
 namespace MxcGenerics\Stdlib;
 
 use \Traversable;
+use Zend\Json\Json;
+use Zend\Json\Expr;
 use MxcGenerics\Exception;
 
 class GenericRegistry implements \IteratorAggregate {
@@ -55,7 +57,8 @@ class GenericRegistry implements \IteratorAggregate {
     public function __get($key)
     {
         $key = lcfirst($key);
-        return isset($this->___data[$key]) ? $this->___data[$key] : null;
+        $data = isset($this->___data[$key]) ? $this->___data[$key] : null;
+        return $data;
     }
     
     /**
@@ -80,26 +83,76 @@ class GenericRegistry implements \IteratorAggregate {
         if (isset($this->___data[$key])) unset($this->___data[$key]);
     }
 
-    /**
-     * Cast to array
-     *
-     * @return array
-     */
-    public function toArray()
+
+    public function toArray($recursive = true, $detectJsonExpr = false, $normalize = false)
     {
-        $array = array();
-        $transform = function ($letters) {
+        return self::_toArray($this->___data, $recursive, $detectJsonExpr, $normalize);
+    }
+    
+    private static function _toArray($iterator, $recursive = true, $detectJsonExpr = false, $normalize = false) 
+    {
+        
+        if (!$recursive && !$normalize && !$detectJsonExpr) return $iterator;
+        
+        $transform = function($letters) {
             $letter = array_shift($letters); 
             return '_' . strtolower($letter);
         };
-        foreach ($this->___data as $key => $value) {
-            if ($key === '__strictMode__') continue;
-            $normalizedKey = preg_replace_callback('/([A-Z])/', $transform, $key);
-            $array[$normalizedKey] = $value;
+                    
+
+        $array = array();
+        foreach ($iterator as $key => $value) {
+
+            if (true === $normalize) {
+                $key = preg_replace_callback('/([A-Z])/', $transform, $key);
+            }
+
+            if (is_string($value)) {
+                if ((true === $detectJsonExpr) && (substr($value,0,5) === '%JS%:')) {
+                    $value = new Expr(substr($value,5));
+                }
+                $array[$key] = $value;
+                continue;
+            }
+            
+            if (is_scalar($value)) {
+                $array[$key] = $value;
+                continue;
+            }
+
+            if ($value instanceof Traversable) {
+                $array[$key] = static::_toArray($value, $recursive, $detectJsonExpr, $normalize);
+                continue;
+            }
+
+            if (is_array($value)) {
+                $array[$key] = static::_toArray($value, $recursive, $detectJsonExpr, $normalize);
+                continue;
+            }
+
+            $array[$key] = $value;
         }
+
         return $array;
     }
-
+    
+    
+    /**
+     * Cast to Json
+     * optionally replaces string values starting with %JS%: with Zend/Json/Expr objects 
+	 * before encoding
+	 *
+     * @return Json encoded representation
+     */
+    public function toJson($handleJsExpressions = false)
+    {
+        if (!$handleJsExpressions) {
+            return JSon::encode($this->toArray(true, false), false);                        
+        } else {
+            return Json::encode($this->toArray(true, true), false, array('enableJsonExprFinder' => true));        
+        }                 
+    }
+    
     /**
      * Set properties en masse
      *
