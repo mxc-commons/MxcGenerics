@@ -2,17 +2,13 @@ MxcGenerics
 ===============
 Version 0.1.0 created by Frank Hein and the mxc-commons team.
 
-MxcGenerics is part of the [maxence openBeee initiative](http://www.maxence.de/mxcweb/index.php/themen/open-business/)
-by [maxence business consulting gmbh, Germany](http://www.maxence.de). 
+MxcGenerics is part of the maxence Open Source Initiative by [maxence business consulting gmbh, Germany](http://www.maxence.de). 
 
 Introduction
 ------------
 
 MxcGenerics provides generic classes and assets we use in development. Other modules from maxence rely on
 MxcGenerics.
-
-MxcGenerics is part of the [maxence openBeee initiative](http://www.maxence.de/mxcweb/index.php/themen/open-business/)
-by [maxence business consulting gmbh, Germany](http://www.maxence.de). 
 
 
 Features / Goals
